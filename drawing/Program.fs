@@ -1,7 +1,16 @@
-﻿// Learn more about F# at http://fsharp.org
-// See the 'F# Tutorial' project for more help.
+﻿// Based on https://www.youtube.com/watch?v=3PlRyug05hM
 
-[<EntryPoint>]
-let main argv = 
-    printfn "%A" argv
-    0 // return an integer exit code
+open System
+open System.Windows.Forms
+
+let form = new Form()
+form.Visible <- true
+form.Text <- "F# forms"
+
+let label = new Label()
+label.Text <- "a label"
+
+form.Controls.Add(label)
+
+[<STAThread>]
+Application.Run(form)

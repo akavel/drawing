@@ -3,13 +3,8 @@
 open System
 open System.Windows.Forms
 
-let form = new Form()
-form.Visible <- true
-form.Text <- "F# forms"
-
-let label = new Label()
-label.Text <- "a label"
-
+let form = new Form(Visible=true, Text="Drawing App")
+let label = new Label(Text="sample label")
 form.Controls.Add(label)
 
 [<STAThread>]

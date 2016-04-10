@@ -7,6 +7,8 @@ let form = new Form(Visible=true, Text="Drawing App", WindowState=FormWindowStat
 
 type Canvas() =
     inherit Control()
+    override c.OnResize(e:EventArgs) =
+        c.Refresh()
     override c.OnPaint(e:PaintEventArgs) =
         //System.Diagnostics.Debug.WriteLine("OnPaint")
         base.OnPaint(e)
@@ -15,8 +17,7 @@ type Canvas() =
         let rect = new Rectangle(100,100,200,200)
         g.DrawEllipse(Pens.Black, rect)
         g.DrawRectangle(Pens.Red, rect)
-    override c.OnResize(e:EventArgs) =
-        c.Refresh()
+
 
 let canvas = new Canvas(Dock=DockStyle.Fill)
 form.Controls.Add(canvas)

@@ -26,7 +26,7 @@ let canvas = new Canvas(Dock=DockStyle.Fill)
 form.Controls.Add(canvas)
 
 type Toolbox() =
-    inherit Form()
+    inherit Form(ShowInTaskbar=false, FormBorderStyle=FormBorderStyle.SizableToolWindow)
     override t.OnFormClosing(e) =
         // Just hide the window when user clicks the [x] button
         if e.CloseReason = CloseReason.UserClosing then 

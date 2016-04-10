@@ -21,12 +21,15 @@ type Canvas() =
         g.DrawEllipse(Pens.Black, rect)
         g.DrawRectangle(Pens.Red, rect)
     
-    override c.OnMouseClick(e:MouseEventArgs) =
-        System.Diagnostics.Debug.WriteLine(sprintf "btn=%A, clicks=%A" e.Button e.Clicks)
-
-
 let canvas = new Canvas(Dock=DockStyle.Fill)
 form.Controls.Add(canvas)
+
+let toolbox = new Form(Visible=false, Text="testing", TopMost=true)
+toolbox.FormClosing.Add(fun e -> 
+    if e.CloseReason = CloseReason.UserClosing then 
+        toolbox.Hide()
+        e.Cancel <- true)
+canvas.MouseClick.Add(fun e -> toolbox.Visible <- not toolbox.Visible)
 
 [<STAThread>]
 Application.Run(form)

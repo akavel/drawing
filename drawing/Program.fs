@@ -15,11 +15,11 @@ type Canvas() =
         let rect = new Rectangle(100,100,200,200)
         g.DrawEllipse(Pens.Black, rect)
         g.DrawRectangle(Pens.Red, rect)
+    override c.OnResize(e:EventArgs) =
+        c.Refresh()
 
-let canvas = new Canvas()
+let canvas = new Canvas(Dock=DockStyle.Fill)
 form.Controls.Add(canvas)
-form.SizeChanged.Add(fun e -> canvas.Refresh())
-canvas.Dock <- DockStyle.Fill
 
 [<STAThread>]
 Application.Run(form)

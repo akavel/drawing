@@ -11,6 +11,7 @@ let form = new Form(Visible=true, Text="Drawing App", WindowState=FormWindowStat
 type Canvas() =
     inherit Control()
     override c.OnResize(e:EventArgs) =
+        // Make sure to repaint the whole window when resized
         c.Refresh()
     override c.OnPaint(e:PaintEventArgs) =
         //System.Diagnostics.Debug.WriteLine("OnPaint")
@@ -24,11 +25,15 @@ type Canvas() =
 let canvas = new Canvas(Dock=DockStyle.Fill)
 form.Controls.Add(canvas)
 
-let toolbox = new Form(Visible=false, Text="testing", TopMost=true)
-toolbox.FormClosing.Add(fun e -> 
-    if e.CloseReason = CloseReason.UserClosing then 
-        toolbox.Hide()
-        e.Cancel <- true)
+type Toolbox() =
+    inherit Form()
+    override t.OnFormClosing(e) =
+        // Just hide the window when user clicks the [x] button
+        if e.CloseReason = CloseReason.UserClosing then 
+            t.Hide()
+            e.Cancel <- true
+
+let toolbox = new Toolbox(Visible=false, Text="testing", TopMost=true)
 canvas.MouseClick.Add(fun e -> toolbox.Visible <- not toolbox.Visible)
 
 [<STAThread>]

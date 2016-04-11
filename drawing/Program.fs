@@ -36,51 +36,21 @@ type Toolbox() =
 let toolbox = new Toolbox(Visible=true, Text="testing", TopMost=true)
 canvas.MouseClick.Add(fun e -> toolbox.Visible <- not toolbox.Visible)
 
-let anchorAll = AnchorStyles.Top+AnchorStyles.Bottom+AnchorStyles.Left+AnchorStyles.Right
-let colorDisplay = new Panel(Anchor=anchorAll, BackColor=Color.Green)
-let s1 = new TrackBar(Anchor=anchorAll)
-let s2 = new TrackBar(Anchor=anchorAll)
-let s3 = new TrackBar(Anchor=anchorAll)
+let colorDisplay = new Panel(Dock=DockStyle.Fill, BackColor=Color.Green)
+let s1 = new TrackBar(Dock=DockStyle.Fill)
+let s2 = new TrackBar(Dock=DockStyle.Fill)
+let s3 = new TrackBar(Dock=DockStyle.Fill)
 let toolboxLayout = new TableLayoutPanel(Dock=DockStyle.Fill)
 toolboxLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100.f)) |> ignore
 toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
 toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
 toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
 toolboxLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100.f)) |> ignore
-toolboxLayout.SuspendLayout()
 toolboxLayout.Controls.Add(colorDisplay)
 toolboxLayout.Controls.Add(s1)
 toolboxLayout.Controls.Add(s2)
 toolboxLayout.Controls.Add(s3) 
-toolboxLayout.ResumeLayout(false)
 toolbox.Controls.Add(toolboxLayout)
-
-//let anchorAll = AnchorStyles.Top+AnchorStyles.Bottom+AnchorStyles.Left+AnchorStyles.Right
-//let colorDisplay = new Panel(Dock=DockStyle.Fill, BackColor=Color.Green, Anchor=anchorAll)
-//let scroll1 = new TrackBar(Dock=DockStyle.Fill)
-//let scroll2 = new TrackBar(Dock=DockStyle.Fill)
-//let scroll3 = new TrackBar(Dock=DockStyle.Fill)
-//let toolboxLayout = new TableLayoutPanel(Dock=DockStyle.Fill)
-////    Anchor=anchorAll)
-////toolboxLayout.Location <- Point(0,0)
-////toolboxLayout.Padding <- Padding(3)
-////toolboxLayout.RowCount <-4
-////toolboxLayout.ColumnCount <- 1
-//toolboxLayout.Controls.Add(colorDisplay)
-//toolboxLayout.Controls.Add(scroll1)
-//toolboxLayout.Controls.Add(scroll2)
-//toolboxLayout.Controls.Add(scroll3)
-//
-////toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
-////toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
-////toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
-////toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
-////toolboxLayout.RowStyles.Add(new RowStyle(SizeType.Percent)) |> ignore
-////toolboxLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)) |> ignore
-////toolboxLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)) |> ignore
-////toolboxLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)) |> ignore
-////toolboxLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)) |> ignore
-//toolbox.Controls.Add(toolboxLayout)
 
 [<STAThread>]
 Application.Run(form)

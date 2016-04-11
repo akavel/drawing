@@ -52,9 +52,12 @@ let lchToLab (CIELCH (l, c, h)) =
     let hRad = h * deg2rad
     CIELab (l, cos(hRad)*c, sin(hRad)*c)
 let labToXyz (CIELab (L, a, b)) =
-    let convert factor n = factor * (if n > 0.008856
-                                     then n*n*n
-                                     else (n - 16./116.) / 7.787)
+    let t0 = 4./29.
+    let t1 = 6./29.
+    let t2 = 3.*t1*t1
+    let convert factor n = (if n > t1
+                            then n*n*n
+                            else t2*(n-t0)) * factor * 0.01
     let tmpy = (L+16.)/116.
     let tmpx = tmpy + a/500.
     let tmpz = tmpy - b/200.
@@ -63,7 +66,7 @@ let labToXyz (CIELab (L, a, b)) =
     let zfact = 108.883
     XYZ (convert xfact tmpx, convert yfact tmpy, convert zfact tmpz)
 let xyz2rgb (XYZ (x, y, z)) =
-    let conv1 fx fy fz = fx*x + fy*y + fz*z
+    let conv1 fx fy fz = (fx*x + fy*y + fz*z)*0.01
     let conv2 n = if n > 0.0031308
                   then 1.055 * Math.Pow(n, 1./2.4) - 0.055
                   else 12.92 * n
@@ -88,11 +91,17 @@ toolboxLayout.Controls.Add(s3)
 toolbox.Controls.Add(toolboxLayout)
 let recolor _ =
     let s (s:TrackBar) = float s.Value / float s.Maximum
-    let lch = CIELCH (150.*s s1, 100.*s s2, 360.*s s3)
+    let lch = CIELCH (150.*s s3, 100.*s s2, 360.*s s1)
     System.Diagnostics.Debug.WriteLine(sprintf "%A" lch)
     let (RGB (r, g, b)) = lch |> lchToLab |> labToXyz |> xyz2rgb
     System.Diagnostics.Debug.WriteLine(sprintf "rgb %A %A %A" r g b)
-    let i f = int (f*255.0)
+    let i0 f = int (f*255.0)
+    let i f = 
+        let ii = i0 f
+        // FIXME: ad-hoc fix by MC; is this OK?
+        if ii < 0 then 0
+          elif ii >= 255 then 255
+          else ii
     colorDisplay.BackColor <- Color.FromArgb(i r, i g, i b)
 s1.ValueChanged.Add(recolor)
 s2.ValueChanged.Add(recolor)

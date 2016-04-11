@@ -75,9 +75,9 @@ let xyz2rgb (XYZ (x, y, z)) =
          conv1   5.57  -20.40 105.70 |> conv2)
 
 let colorDisplay = new Panel(Dock=DockStyle.Fill, BackColor=Color.Green)
-let s1 = new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000)
-let s2 = new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000)
-let s3 = new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000)
+let s1 = new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, TickStyle=TickStyle.None)
+let s2 = new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, TickStyle=TickStyle.None)
+let s3 = new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, TickStyle=TickStyle.None)
 let toolboxLayout = new TableLayoutPanel(Dock=DockStyle.Fill)
 toolboxLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100.f)) |> ignore
 toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore

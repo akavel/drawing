@@ -33,8 +33,17 @@ type Toolbox() =
             t.Hide()
             e.Cancel <- true
 
-let toolbox = new Toolbox(Visible=false, Text="testing", TopMost=true)
+let toolbox = new Toolbox(Visible=true, Text="testing", TopMost=true)
 canvas.MouseClick.Add(fun e -> toolbox.Visible <- not toolbox.Visible)
+
+let scroll1 = new TrackBar(Dock=DockStyle.Fill)
+let scroll2 = new TrackBar(Dock=DockStyle.Fill)
+let scroll3 = new TrackBar(Dock=DockStyle.Fill)
+let toolboxLayout = new TableLayoutPanel(Dock=DockStyle.Fill)
+toolboxLayout.Controls.Add(scroll1)
+toolboxLayout.Controls.Add(scroll2)
+toolboxLayout.Controls.Add(scroll3)
+toolbox.Controls.Add(toolboxLayout)
 
 [<STAThread>]
 Application.Run(form)

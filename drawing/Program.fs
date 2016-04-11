@@ -36,10 +36,12 @@ type Toolbox() =
 let toolbox = new Toolbox(Visible=true, Text="testing", TopMost=true)
 canvas.MouseClick.Add(fun e -> toolbox.Visible <- not toolbox.Visible)
 
+let colorDisplay = new Panel(Dock=DockStyle.Fill, BackColor=Color.Green)
 let scroll1 = new TrackBar(Dock=DockStyle.Fill)
 let scroll2 = new TrackBar(Dock=DockStyle.Fill)
 let scroll3 = new TrackBar(Dock=DockStyle.Fill)
 let toolboxLayout = new TableLayoutPanel(Dock=DockStyle.Fill)
+toolboxLayout.Controls.Add(colorDisplay)
 toolboxLayout.Controls.Add(scroll1)
 toolboxLayout.Controls.Add(scroll2)
 toolboxLayout.Controls.Add(scroll3)

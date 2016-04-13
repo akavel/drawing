@@ -104,6 +104,7 @@ let recolor _ =
 s1.ValueChanged.Add(recolor)
 s2.ValueChanged.Add(recolor)
 s3.ValueChanged.Add(recolor)
+recolor ()
 
 [<STAThread>]
 Application.Run(form)

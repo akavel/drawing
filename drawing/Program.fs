@@ -84,10 +84,10 @@ toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
 toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
 let colorDisplay = new Panel(Dock=DockStyle.Fill, BackColor=Color.Green)
 toolboxLayout.Controls.Add(colorDisplay)
+let tee = fun sideEffect x -> sideEffect x ; x
 let s1::s2::s3::[] = [1..3] |> List.map (fun _ ->
-    let s = new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, TickStyle=TickStyle.None)
-    toolboxLayout.Controls.Add(s)
-    s)
+    new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, TickStyle=TickStyle.None)
+    |> tee toolboxLayout.Controls.Add)
 let recolor _ =
     let s (s:TrackBar) = float s.Value / float s.Maximum
     let lch = CIELCH (150.*s s3, 100.*s s2, 360.*s s1)

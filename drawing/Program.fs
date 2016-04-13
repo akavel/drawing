@@ -68,7 +68,7 @@ let labToXyz (CIELab (L, a, b)) =
 let xyz2rgb (XYZ (x, y, z)) =
     let conv1 fx fy fz = (fx*x + fy*y + fz*z)*0.01
     let conv2 n = if n > 0.0031308
-                  then 1.055 * Math.Pow(n, 1./2.4) - 0.055
+                  then 1.055 * n**(1./2.4) - 0.055
                   else 12.92 * n
     RGB (conv1 324.06 -153.72 -49.86 |> conv2,
          conv1 -96.89  187.58   4.15 |> conv2,

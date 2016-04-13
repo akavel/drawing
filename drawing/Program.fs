@@ -116,14 +116,14 @@ let s1::s2::s3::[] = [1..3] |> List.map (fun _ ->
     |> tee toolboxLayout.Controls.Add)
 let recolor _ =
     let s (s:TrackBar) = float s.Value / float s.Maximum
-    //let lch = CIELCH (150.*s s3, 100.*s s2, 360.*s s1)
-    ////System.Diagnostics.Debug.WriteLine(sprintf "%A" lch)
-    //let (RGB (r, g, b)) = lch
-    ////System.Diagnostics.Debug.WriteLine(sprintf "rgb %A %A %A" r g b)
-    //// FIXME: ad-hoc clipping to [0..255] by MC; is this OK?
-    //let i f = f*255.0 |> int |> max 0 |> min 255
-    //colorDisplay.BackColor <- Color.FromArgb(i r, i g, i b)
-    colorDisplay.BackColor <- ahsbToColor 255 (360.*s s1) (s s3) (s s2)
+    let lch = CIELCH (150.*s s3, 100.*s s2, 360.*s s1)
+    //System.Diagnostics.Debug.WriteLine(sprintf "%A" lch)
+    let (RGB (r, g, b)) = lch
+    //System.Diagnostics.Debug.WriteLine(sprintf "rgb %A %A %A" r g b)
+    // FIXME: ad-hoc clipping to [0..255] by MC; is this OK?
+    let i f = f*255.0 |> int |> max 0 |> min 255
+    colorDisplay.BackColor <- Color.FromArgb(i r, i g, i b)
+    //colorDisplay.BackColor <- ahsbToColor 255 (360.*s s1) (s s3) (s s2)
 s1.ValueChanged.Add(recolor)
 s2.ValueChanged.Add(recolor)
 s3.ValueChanged.Add(recolor)

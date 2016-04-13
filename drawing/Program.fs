@@ -36,6 +36,36 @@ type Toolbox() =
 let toolbox = new Toolbox(Visible=true, Text="testing", TopMost=true)
 canvas.MouseClick.Add(fun e -> toolbox.Visible <- not toolbox.Visible)
 
+// from: https://blogs.msdn.microsoft.com/cjacks/2006/04/12/converting-from-hsb-to-rgb-in-net/
+let ahsbToColor a h s b =
+    // TODO: verify that args are in proper ranges:
+    // a [0,255]
+    // h [0,360.]
+    // s [0,1.]
+    // b [0,1.]
+    let max, min =
+        if b > 0.5
+        then b-b*s+s, b+b*s-s
+        else b+b*s,   b-b*s
+    let sextant = int (h / 60.)
+    let h =
+        (if h >= 300.
+         then h - 360.
+         else h)  / 60. - 2. * float ((sextant+1) % 6 / 2)
+    let mid =
+        if sextant % 2 = 0
+        then min + h*(max-min)
+        else min - h*(max-min)
+    let i n = int (n * 255.)
+    let rgb r g b = Color.FromArgb(a, i r, i g, i b)
+    match sextant with
+    | 1 -> rgb mid max min
+    | 2 -> rgb min max mid
+    | 3 -> rgb min mid max
+    | 4 -> rgb mid min max
+    | 5 -> rgb max min mid
+    | _ -> rgb max mid min
+
 // TODO: maybe use HSB instead of LCH? should be much simpler, Color object seems to have conversion methods
 // Based on http://easyrgb.com/index.php?X=MATH&H=10#text10
 // via http://stackoverflow.com/a/7561257/98528
@@ -86,13 +116,14 @@ let s1::s2::s3::[] = [1..3] |> List.map (fun _ ->
     |> tee toolboxLayout.Controls.Add)
 let recolor _ =
     let s (s:TrackBar) = float s.Value / float s.Maximum
-    let lch = CIELCH (150.*s s3, 100.*s s2, 360.*s s1)
-    //System.Diagnostics.Debug.WriteLine(sprintf "%A" lch)
-    let (RGB (r, g, b)) = lch
-    //System.Diagnostics.Debug.WriteLine(sprintf "rgb %A %A %A" r g b)
-    // FIXME: ad-hoc clipping to [0..255] by MC; is this OK?
-    let i f = f*255.0 |> int |> max 0 |> min 255
-    colorDisplay.BackColor <- Color.FromArgb(i r, i g, i b)
+    //let lch = CIELCH (150.*s s3, 100.*s s2, 360.*s s1)
+    ////System.Diagnostics.Debug.WriteLine(sprintf "%A" lch)
+    //let (RGB (r, g, b)) = lch
+    ////System.Diagnostics.Debug.WriteLine(sprintf "rgb %A %A %A" r g b)
+    //// FIXME: ad-hoc clipping to [0..255] by MC; is this OK?
+    //let i f = f*255.0 |> int |> max 0 |> min 255
+    //colorDisplay.BackColor <- Color.FromArgb(i r, i g, i b)
+    colorDisplay.BackColor <- ahsbToColor 255 (360.*s s1) (s s3) (s s2)
 s1.ValueChanged.Add(recolor)
 s2.ValueChanged.Add(recolor)
 s3.ValueChanged.Add(recolor)

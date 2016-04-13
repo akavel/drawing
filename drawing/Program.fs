@@ -91,16 +91,11 @@ let s1::s2::s3::[] = [1..3] |> List.map (fun _ ->
 let recolor _ =
     let s (s:TrackBar) = float s.Value / float s.Maximum
     let lch = CIELCH (150.*s s3, 100.*s s2, 360.*s s1)
-    System.Diagnostics.Debug.WriteLine(sprintf "%A" lch)
+    //System.Diagnostics.Debug.WriteLine(sprintf "%A" lch)
     let (RGB (r, g, b)) = lch |> lchToLab |> labToXyz |> xyz2rgb
-    System.Diagnostics.Debug.WriteLine(sprintf "rgb %A %A %A" r g b)
-    let i0 f = int (f*255.0)
-    let i f = 
-        let ii = i0 f
-        // FIXME: ad-hoc fix by MC; is this OK?
-        if ii < 0 then 0
-          elif ii >= 255 then 255
-          else ii
+    //System.Diagnostics.Debug.WriteLine(sprintf "rgb %A %A %A" r g b)
+    // FIXME: ad-hoc clipping to [0..255] by MC; is this OK?
+    let i f = f*255.0 |> int |> max 0 |> min 255
     colorDisplay.BackColor <- Color.FromArgb(i r, i g, i b)
 s1.ValueChanged.Add(recolor)
 s2.ValueChanged.Add(recolor)

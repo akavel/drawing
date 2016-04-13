@@ -36,6 +36,7 @@ type Toolbox() =
 let toolbox = new Toolbox(Visible=true, Text="testing", TopMost=true)
 canvas.MouseClick.Add(fun e -> toolbox.Visible <- not toolbox.Visible)
 
+// TODO: maybe use HSB instead of LCH? should be much simpler, Color object seems to have conversion methods
 // Based on http://easyrgb.com/index.php?X=MATH&H=10#text10
 // via http://stackoverflow.com/a/7561257/98528
 // googled based on https://en.wikipedia.org/wiki/Lab_color_space#Cylindrical_representation:_CIELCh_or_CIEHLC

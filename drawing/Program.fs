@@ -74,21 +74,19 @@ let xyz2rgb (XYZ (x, y, z)) =
          conv1 -96.89  187.58   4.15 |> conv2,
          conv1   5.57  -20.40 105.70 |> conv2)
 
-let colorDisplay = new Panel(Dock=DockStyle.Fill, BackColor=Color.Green)
-let s1 = new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, TickStyle=TickStyle.None)
-let s2 = new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, TickStyle=TickStyle.None)
-let s3 = new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, TickStyle=TickStyle.None)
 let toolboxLayout = new TableLayoutPanel(Dock=DockStyle.Fill)
+toolbox.Controls.Add(toolboxLayout)
+toolboxLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100.f)) |> ignore
 toolboxLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100.f)) |> ignore
 toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
 toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
 toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
-toolboxLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100.f)) |> ignore
+let colorDisplay = new Panel(Dock=DockStyle.Fill, BackColor=Color.Green)
 toolboxLayout.Controls.Add(colorDisplay)
-toolboxLayout.Controls.Add(s1)
-toolboxLayout.Controls.Add(s2)
-toolboxLayout.Controls.Add(s3) 
-toolbox.Controls.Add(toolboxLayout)
+let s1::s2::s3::[] = [1..3] |> List.map (fun _ ->
+    let s = new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, TickStyle=TickStyle.None)
+    toolboxLayout.Controls.Add(s)
+    s)
 let recolor _ =
     let s (s:TrackBar) = float s.Value / float s.Maximum
     let lch = CIELCH (150.*s s3, 100.*s s2, 360.*s s1)

@@ -1,7 +1,20 @@
 ﻿open System
 open System.Drawing
 open System.Drawing.Drawing2D
+open System.Runtime.InteropServices
 open System.Windows.Forms
+
+// TODO: try embedding a manifest (http://stackoverflow.com/a/26365481/98528) for High DPI awareness, as
+// it seems more "advised" than SetProcessDPIAware (https://msdn.microsoft.com/en-us/library/windows/desktop/dn469266%28v=vs.85%29.aspx#supporting_dynamic_dpi_changes)
+type PROCESS_DPI_AWARENESS =
+    | Process_DPI_Unaware = 0
+    | Process_System_DPI_Aware = 1
+    | Process_Per_Monitor_DPI_Aware = 2
+[<DllImport("SHCore.dll", SetLastError = true)>]
+extern int SetProcessDpiAwareness(PROCESS_DPI_AWARENESS awareness);
+let ok = SetProcessDpiAwareness(PROCESS_DPI_AWARENESS.Process_System_DPI_Aware)
+if ok <> 0 then
+    System.Diagnostics.Debug.WriteLine(sprintf "couldn't change DPI awareness: %A" ok)
 
 // TODO: right-click or finger-click opens a menu with 3 sliders for choosing color in hcl space
 // TODO: the tool-window stays on top, can be easily closed, and also has color picker
@@ -23,11 +36,11 @@ type Canvas() =
         // Make sure to repaint the whole window when resized
         c.Refresh()
     override c.OnPaint(e:PaintEventArgs) =
-        //System.Diagnostics.Debug.WriteLine("OnPaint")
+        System.Diagnostics.Debug.WriteLine("OnPaint {0}x{1}", c.ClientSize.Width, c.ClientSize.Height)
         base.OnPaint(e)
         let ys = float c.ClientSize.Width / float bitmap.Width
         let xs = float c.ClientSize.Height / float bitmap.Height
-        let rescale n = (float n) * (min xs ys) |> int
+        let rescale n = n * int (min xs ys) |> int
         let g = e.Graphics
         g.InterpolationMode <- InterpolationMode.NearestNeighbor
         g.DrawImage(bitmap, 0, 0, rescale bitmap.Width, rescale bitmap.Height)
@@ -127,6 +140,8 @@ let tee = fun sideEffect x -> sideEffect x ; x
 let s1::s2::s3::[] = [1..3] |> List.map (fun _ ->
     new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, TickStyle=TickStyle.None)
     |> tee toolboxLayout.Controls.Add)
+toolbox.MinimumSize <- new Size(s1.PreferredSize.Width, 4*s1.PreferredSize.Height+(form.Height-form.ClientRectangle.Height))
+toolbox.Height <- 5*s1.PreferredSize.Height+(form.Height-form.ClientRectangle.Height)
 let recolor _ =
     let s (s:TrackBar) = float s.Value / float s.Maximum
     let lch = CIELCH (150.*s s3, 100.*s s2, 360.*s s1)

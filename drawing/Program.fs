@@ -1,5 +1,6 @@
 ﻿open System
 open System.Drawing
+open System.Drawing.Drawing2D
 open System.Windows.Forms
 
 // TODO: right-click or finger-click opens a menu with 3 sliders for choosing color in hcl space
@@ -10,13 +11,26 @@ let form = new Form(Visible=true, Text="Drawing App", WindowState=FormWindowStat
 
 type Canvas() =
     inherit Control()
+    let bitmap = new Bitmap(640, 480)
+    do
+        for x = 0 to bitmap.Width-1 do
+            for y = 0 to bitmap.Height-1 do
+                bitmap.SetPixel(x, y, Color.Black)
+        let b = bitmap
+        let g = Graphics.FromImage(bitmap)
+        g.DrawLine(Pens.Yellow, 0, b.Height-1, b.Width-1, 0)
     override c.OnResize(e:EventArgs) =
         // Make sure to repaint the whole window when resized
         c.Refresh()
     override c.OnPaint(e:PaintEventArgs) =
         //System.Diagnostics.Debug.WriteLine("OnPaint")
         base.OnPaint(e)
+        let ys = float c.ClientSize.Width / float bitmap.Width
+        let xs = float c.ClientSize.Height / float bitmap.Height
+        let rescale n = (float n) * (min xs ys) |> int
         let g = e.Graphics
+        g.InterpolationMode <- InterpolationMode.NearestNeighbor
+        g.DrawImage(bitmap, 0, 0, rescale bitmap.Width, rescale bitmap.Height)
         g.DrawLine(Pens.Blue, 0, 0, c.Width, c.Height)
         let rect = new Rectangle(100,100,200,200)
         g.DrawEllipse(Pens.Black, rect)

@@ -131,19 +131,20 @@ let toolboxLayout = new TableLayoutPanel(Dock=DockStyle.Fill)
 toolbox.Controls.Add(toolboxLayout)
 toolboxLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100.f)) |> ignore
 toolboxLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100.f)) |> ignore
-toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
-toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
-toolboxLayout.RowStyles.Add(new RowStyle()) |> ignore
+toolboxLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 40.f)) |> ignore
+toolboxLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 40.f)) |> ignore
+toolboxLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 40.f)) |> ignore
 let colorDisplay = new Panel(Dock=DockStyle.Fill, BackColor=Color.Green)
 toolboxLayout.Controls.Add(colorDisplay)
 let tee = fun sideEffect x -> sideEffect x ; x
 let s1::s2::s3::[] = [1..3] |> List.map (fun _ ->
-    new TrackBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, TickStyle=TickStyle.None)
+    new HScrollBar(Dock=DockStyle.Fill, Maximum=10000, Value=5000, LargeChange=2000)
     |> tee toolboxLayout.Controls.Add)
 toolbox.MinimumSize <- new Size(s1.PreferredSize.Width, 4*s1.PreferredSize.Height+(form.Height-form.ClientRectangle.Height))
-toolbox.Height <- 5*s1.PreferredSize.Height+(form.Height-form.ClientRectangle.Height)
+toolbox.Height <- 2*(5*s1.PreferredSize.Height+(form.Height-form.ClientRectangle.Height))
+toolbox.Width <- toolbox.Height
 let recolor _ =
-    let s (s:TrackBar) = float s.Value / float s.Maximum
+    let s (s:HScrollBar) = float s.Value / float s.Maximum
     let lch = CIELCH (150.*s s3, 100.*s s2, 360.*s s1)
     //System.Diagnostics.Debug.WriteLine(sprintf "%A" lch)
     let (RGB (r, g, b)) = lch

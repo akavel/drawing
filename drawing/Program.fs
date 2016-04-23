@@ -19,10 +19,10 @@ if ok <> 0 then
     System.Diagnostics.Debug.WriteLine(sprintf "couldn't change DPI awareness: %A" ok)
 
 // TODO: two-finger (or one-finger?) pan & zoom of the canvas on touch-enabled computers
-// TODO: try to speed-up bitmap drawing & fix flickering by using Direct2D (e.g. D2D1CreateFactory via pinvoke?) or GDI or use double-buffering
 // TODO: the tool-window has color picker (pipette)
 // TODO: add F# REPL
 // TODO: in future, make fullscreen: FormBorderStyle=FormBorderStyle.None; but find out a way to revert this
+// TODO: in future, consider trying to speed-up bitmap drawing by using Direct2D (e.g. D2D1CreateFactory via pinvoke?) or GDI
 
 let form = new Form(Visible=true, Text="Drawing App", WindowState=FormWindowState.Maximized)
 
@@ -59,8 +59,10 @@ type Image() =
             lastVertex <- Some p
             Some (Rectangle.FromLTRB(min last.X p.X, min last.Y p.Y, max last.X p.X, max last.Y p.Y))
 
-type Canvas() =
+type Canvas() as c =
     inherit Control()
+    do
+        c.DoubleBuffered <- true
     let image = new Image()
     let mutable scale = 1.
     let img2win coord = float coord * scale |> int

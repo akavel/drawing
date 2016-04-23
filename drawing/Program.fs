@@ -19,9 +19,8 @@ if ok <> 0 then
     System.Diagnostics.Debug.WriteLine(sprintf "couldn't change DPI awareness: %A" ok)
 
 // TODO: two-finger (or one-finger?) pan & zoom of the canvas on touch-enabled computers
-// TODO: try to speed-up bitmap drawing by using Direct2D (e.g. D2D1CreateFactory via pinvoke?) or GDI or use double-buffering
-// TODO: right-click or finger-click opens a menu with 3 sliders for choosing color in hcl space
-// TODO: the tool-window stays on top, can be easily closed, and also has color picker
+// TODO: try to speed-up bitmap drawing & fix flickering by using Direct2D (e.g. D2D1CreateFactory via pinvoke?) or GDI or use double-buffering
+// TODO: the tool-window has color picker (pipette)
 // TODO: add F# REPL
 // TODO: in future, make fullscreen: FormBorderStyle=FormBorderStyle.None; but find out a way to revert this
 

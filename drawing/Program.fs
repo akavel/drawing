@@ -47,21 +47,34 @@ let toolbox = new Toolbox(Visible=true, Text="testing", TopMost=true)
 type Image() =
     let bitmap = new Bitmap(640, 480)
     let mutable polygon:Point list = []
-    let mutable lastVertex:Point option = None
+    let mutable start:Point option = None
+    let startNear (p:Point) =
+        let len x y = sqrt (x*x + y*y |> float)
+        match start with
+        | Some s when len (s.X-p.X) (s.Y-p.Y) <= 5. -> true, s
+        | _ -> false, p
     do
         let g = Graphics.FromImage(bitmap)
         g.FillRectangle(Brushes.Black, 0, 0, bitmap.Width, bitmap.Height)
     member val Bitmap = bitmap
-    member val LastVertex = lastVertex
-    member img.AddVertex(p:Point):Point option =
-        match lastVertex with
-        | None -> 
-            lastVertex <- Some p
-        | Some last ->
+    member val LastVertex =
+        match polygon with
+        | p :: rest -> Some p
+        | [] -> None
+    member img.AddVertex(p:Point) =
+        let close, p = startNear p
+        match polygon with
+        | [] ->
+            start <- Some p
+        | last :: rest ->
             let g = Graphics.FromImage(bitmap)
             g.DrawLine(Pens.Yellow, last, p)
-            lastVertex <- Some p
-        lastVertex
+        match close with
+        | false ->
+            polygon <- p :: polygon
+        | true ->
+            polygon <- []
+        p, close
 
 type Canvas() as c =
     inherit Control()
@@ -113,11 +126,15 @@ type Canvas() as c =
                 match lineEnd with
                 | None -> ()
                 | Some e -> c.Invalidate(points2rect s e)
-            match image.AddVertex(new Point(e.X |> win2img, e.Y |> win2img)) with
-            | None ->
+            let p, close = image.AddVertex(new Point(e.X |> win2img, e.Y |> win2img))
+            match close with
+            | true ->
                 lineStart <- None
                 lineEnd <- None
-            | Some p ->
+            | false ->
+                match lineStart with
+                | None -> ()
+                | Some s -> c.Invalidate(points2rect s p)
                 lineStart <- img2winP p |> Some
                 lineEnd <- lineStart
     

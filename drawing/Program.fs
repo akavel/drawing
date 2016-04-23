@@ -36,18 +36,18 @@ type Canvas() =
         // Make sure to repaint the whole window when resized
         c.Refresh()
     override c.OnPaint(e:PaintEventArgs) =
-        System.Diagnostics.Debug.WriteLine("OnPaint {0}x{1}", c.ClientSize.Width, c.ClientSize.Height)
+        //System.Diagnostics.Debug.WriteLine("OnPaint {0}x{1}", c.ClientSize.Width, c.ClientSize.Height)
         base.OnPaint(e)
         let ys = float c.ClientSize.Width / float bitmap.Width
         let xs = float c.ClientSize.Height / float bitmap.Height
-        let rescale n = n * int (min xs ys) |> int
+        let rescale n = (float n) * (min xs ys) |> int
         let g = e.Graphics
         g.InterpolationMode <- InterpolationMode.NearestNeighbor
         g.DrawImage(bitmap, 0, 0, rescale bitmap.Width, rescale bitmap.Height)
-        g.DrawLine(Pens.Blue, 0, 0, c.Width, c.Height)
-        let rect = new Rectangle(100,100,200,200)
-        g.DrawEllipse(Pens.Black, rect)
-        g.DrawRectangle(Pens.Red, rect)
+        //g.DrawLine(Pens.Blue, 0, 0, c.Width, c.Height)
+        //let rect = new Rectangle(100,100,200,200)
+        //g.DrawEllipse(Pens.Black, rect)
+        //g.DrawRectangle(Pens.Red, rect)
     
 let canvas = new Canvas(Dock=DockStyle.Fill)
 form.Controls.Add(canvas)

@@ -48,7 +48,7 @@ type Image() =
     let bitmap = new Bitmap(640, 480)
     let mutable polygon:Point list = []
     let mutable start:Point option = None
-    let startNear (p:Point) =
+    let nearStart (p:Point) =
         let len x y = sqrt (x*x + y*y |> float)
         match start with
         | Some s when len (s.X-p.X) (s.Y-p.Y) <= 5. -> true, s
@@ -63,7 +63,7 @@ type Image() =
         | [] -> None
     member img.AddVertex(p:Point) =
         let g = Graphics.FromImage(bitmap)
-        let close, p = startNear p
+        let close, p = nearStart p
         match polygon, close with
         | [], _ ->
             start <- Some p

@@ -18,43 +18,16 @@ let ok = SetProcessDpiAwareness(PROCESS_DPI_AWARENESS.Process_System_DPI_Aware)
 if ok <> 0 then
     System.Diagnostics.Debug.WriteLine(sprintf "couldn't change DPI awareness: %A" ok)
 
+// TODO: two-finger (or one-finger?) pan & zoom of the canvas on touch-enabled computers
 // TODO: try to speed-up bitmap drawing by using Direct2D (e.g. D2D1CreateFactory via pinvoke?) or GDI
 // TODO: right-click or finger-click opens a menu with 3 sliders for choosing color in hcl space
 // TODO: the tool-window stays on top, can be easily closed, and also has color picker
 // TODO: add F# REPL
 // TODO: in future, make fullscreen: FormBorderStyle=FormBorderStyle.None; but find out a way to revert this
+
 let form = new Form(Visible=true, Text="Drawing App", WindowState=FormWindowState.Maximized)
 
-type Canvas() =
-    inherit Control()
-    let bitmap = new Bitmap(640, 480)
-    do
-        for x = 0 to bitmap.Width-1 do
-            for y = 0 to bitmap.Height-1 do
-                bitmap.SetPixel(x, y, Color.Black)
-        let b = bitmap
-        let g = Graphics.FromImage(bitmap)
-        g.DrawLine(Pens.Yellow, 0, b.Height-1, b.Width-1, 0)
-    override c.OnResize(e:EventArgs) =
-        // Make sure to repaint the whole window when resized
-        c.Refresh()
-    override c.OnPaint(e:PaintEventArgs) =
-        //System.Diagnostics.Debug.WriteLine("OnPaint {0}x{1}", c.ClientSize.Width, c.ClientSize.Height)
-        base.OnPaint(e)
-        let ys = float c.ClientSize.Width / float bitmap.Width
-        let xs = float c.ClientSize.Height / float bitmap.Height
-        let rescale n = (float n) * (min xs ys) |> int
-        let g = e.Graphics
-        g.InterpolationMode <- InterpolationMode.NearestNeighbor
-        g.DrawImage(bitmap, 0, 0, rescale bitmap.Width, rescale bitmap.Height)
-        //g.DrawLine(Pens.Blue, 0, 0, c.Width, c.Height)
-        //let rect = new Rectangle(100,100,200,200)
-        //g.DrawEllipse(Pens.Black, rect)
-        //g.DrawRectangle(Pens.Red, rect)
-    
-let canvas = new Canvas(Dock=DockStyle.Fill)
-form.Controls.Add(canvas)
-
+// TODO: change the code so that this can move below Canvas, to maintain reading order
 type Toolbox() =
     inherit Form(ShowInTaskbar=false, FormBorderStyle=FormBorderStyle.SizableToolWindow)
     override t.OnFormClosing(e) =
@@ -64,7 +37,42 @@ type Toolbox() =
             e.Cancel <- true
 
 let toolbox = new Toolbox(Visible=true, Text="testing", TopMost=true)
-canvas.MouseClick.Add(fun e -> toolbox.Visible <- not toolbox.Visible)
+
+type Image() =
+    let bitmap = new Bitmap(640, 480)
+    do
+        for x = 0 to bitmap.Width-1 do
+            for y = 0 to bitmap.Height-1 do
+                bitmap.SetPixel(x, y, Color.Black)
+        let b = bitmap
+        let g = Graphics.FromImage(bitmap)
+        g.DrawLine(Pens.Yellow, 0, b.Height-1, b.Width-1, 0)
+    member val Bitmap = bitmap
+
+type Canvas() =
+    inherit Control()
+    let image = new Image()
+    override c.OnResize(e:EventArgs) =
+        // Make sure to repaint the whole window when resized
+        c.Refresh()
+    override c.OnPaint(e:PaintEventArgs) =
+        //System.Diagnostics.Debug.WriteLine("OnPaint {0}x{1}", c.ClientSize.Width, c.ClientSize.Height)
+        base.OnPaint(e)
+        let ys = float c.ClientSize.Width / float image.Bitmap.Width
+        let xs = float c.ClientSize.Height / float image.Bitmap.Height
+        let rescale n = (float n) * (min xs ys) |> int
+        let g = e.Graphics
+        g.InterpolationMode <- InterpolationMode.NearestNeighbor
+        g.DrawImage(image.Bitmap, 0, 0, rescale image.Bitmap.Width, rescale image.Bitmap.Height)
+    // TODO: split "model" from "view"; or painting-related code from the GUI-mandated ceremony code
+    override c.OnMouseClick(e:MouseEventArgs) =
+        if not toolbox.Visible
+        then toolbox.Show()
+//        else c.AddVertex(e.X, e.Y)
+//    member c.AddVertex(x, y) =        
+    
+let canvas = new Canvas(Dock=DockStyle.Fill)
+form.Controls.Add(canvas)
 
 let toolboxLayout = new TableLayoutPanel(Dock=DockStyle.Fill)
 toolbox.Controls.Add(toolboxLayout)

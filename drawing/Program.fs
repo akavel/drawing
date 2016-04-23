@@ -24,6 +24,10 @@ if ok <> 0 then
 // TODO: in future, make fullscreen: FormBorderStyle=FormBorderStyle.None; but find out a way to revert this
 // TODO: in future, consider trying to speed-up bitmap drawing by using Direct2D (e.g. D2D1CreateFactory via pinvoke?) or GDI
 
+let dump msg obj =
+    System.Diagnostics.Debug.WriteLine(msg + ": {0}", [obj])
+    obj
+
 let form = new Form(Visible=true, Text="Drawing App", WindowState=FormWindowState.Maximized)
 
 // TODO: change the code so that this can move below Canvas, to maintain reading order
@@ -57,7 +61,8 @@ type Image() =
             let g = Graphics.FromImage(bitmap)
             g.DrawLine(Pens.Yellow, last, p)
             lastVertex <- Some p
-            Some (Rectangle.FromLTRB(min last.X p.X, min last.Y p.Y, max last.X p.X, max last.Y p.Y))
+            // NOTE: FromLTRB apparently treats bottom and right edges as out of the rectangle
+            Some (Rectangle.FromLTRB(min last.X p.X, min last.Y p.Y, max last.X p.X + 1, max last.Y p.Y + 1))
 
 type Canvas() as c =
     inherit Control()

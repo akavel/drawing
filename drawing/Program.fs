@@ -62,13 +62,15 @@ type Image() =
         | p :: rest -> Some p
         | [] -> None
     member img.AddVertex(p:Point) =
+        let g = Graphics.FromImage(bitmap)
         let close, p = startNear p
-        match polygon with
-        | [] ->
+        match polygon, close with
+        | [], _ ->
             start <- Some p
-        | last :: rest ->
-            let g = Graphics.FromImage(bitmap)
+        | last :: rest, false ->
             g.DrawLine(Pens.Yellow, last, p)
+        | _, true ->
+            g.FillPolygon(Brushes.Yellow, polygon |> List.toArray)
         match close with
         | false ->
             polygon <- p :: polygon
@@ -132,6 +134,7 @@ type Canvas() as c =
             match close with
             | true ->
                 line <- None
+                c.Refresh()
             | false ->
                 line <- Some (p, p)
     

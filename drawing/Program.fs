@@ -82,11 +82,12 @@ type Canvas() as c =
         c.DoubleBuffered <- true
     let image = new Image()
     let mutable scale = 1.
+    let mutable line:(Point*Point) option = None
     let img2win coord = float coord * scale |> int
     let win2img coord = float coord / scale |> int
     let img2winP (p:Point) = new Point(img2win p.X, img2win p.Y)
-    let mutable lineStart:Point option = None
-    let mutable lineEnd:Point option = None
+    let repaint p1 p2 =
+        c.Invalidate(points2rect p1 p2)
     override c.OnResize(e:EventArgs) =
         let ys = float c.ClientSize.Width / float image.Bitmap.Width
         let xs = float c.ClientSize.Height / float image.Bitmap.Height
@@ -99,44 +100,40 @@ type Canvas() as c =
         let g = e.Graphics
         g.InterpolationMode <- InterpolationMode.NearestNeighbor
         g.DrawImage(image.Bitmap, 0, 0, image.Bitmap.Width |> img2win, image.Bitmap.Height |> img2win)
-        match lineStart, lineEnd with
-        | Some s, Some e ->
-            g.DrawLine(Pens.Yellow, s, e)
-        | _, _ -> ()
-    override c.OnMouseMove(e:MouseEventArgs) =
+        match line with
+        | None -> ()
+        | Some (s, e) -> g.DrawLine(Pens.Yellow, s, e)
+    override c.OnMouseMove(ev:MouseEventArgs) =
         if toolbox.Visible then
-            match lineStart with
+            let p = new Point(ev.X, ev.Y)
+            match line with
             | None -> ()
-            | Some s ->
-                match lineEnd with
-                | None -> ()
-                | Some e -> c.Invalidate(points2rect s e)
-                let p = new Point(e.X, e.Y)
-                lineEnd <- Some p
-                c.Invalidate(points2rect s p)
+            | Some (s, e) ->
+                repaint s e
+                line <- Some (s, p)
+                repaint s p
     // TODO: split "model" from "view"; or painting-related code from the GUI-mandated ceremony code
     override c.OnMouseClick(e:MouseEventArgs) =
         if not toolbox.Visible
         then toolbox.Show()
         else
-            match lineStart with
+            let p = new Point(e.X, e.Y)
+            match line with
             | None -> ()
-            | Some s ->
-                c.Invalidate(points2rect s (new Point(e.X, e.Y)))
-                match lineEnd with
-                | None -> ()
-                | Some e -> c.Invalidate(points2rect s e)
+            | Some (s, e) ->
+                repaint s e
+                repaint s p
             let p, close = image.AddVertex(new Point(e.X |> win2img, e.Y |> win2img))
+            let p = img2winP p
+            match line with
+            | None -> ()
+            | Some (s, e) ->
+                repaint s p
             match close with
             | true ->
-                lineStart <- None
-                lineEnd <- None
+                line <- None
             | false ->
-                match lineStart with
-                | None -> ()
-                | Some s -> c.Invalidate(points2rect s p)
-                lineStart <- img2winP p |> Some
-                lineEnd <- lineStart
+                line <- Some (p, p)
     
 let canvas = new Canvas(Dock=DockStyle.Fill)
 form.Controls.Add(canvas)

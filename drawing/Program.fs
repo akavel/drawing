@@ -19,7 +19,7 @@ if ok <> 0 then
     System.Diagnostics.Debug.WriteLine(sprintf "couldn't change DPI awareness: %A" ok)
 
 // TODO: two-finger (or one-finger?) pan & zoom of the canvas on touch-enabled computers
-// TODO: try to speed-up bitmap drawing by using Direct2D (e.g. D2D1CreateFactory via pinvoke?) or GDI
+// TODO: try to speed-up bitmap drawing by using Direct2D (e.g. D2D1CreateFactory via pinvoke?) or GDI or use double-buffering
 // TODO: right-click or finger-click opens a menu with 3 sliders for choosing color in hcl space
 // TODO: the tool-window stays on top, can be easily closed, and also has color picker
 // TODO: add F# REPL
@@ -40,6 +40,7 @@ let toolbox = new Toolbox(Visible=true, Text="testing", TopMost=true)
 
 type Image() =
     let bitmap = new Bitmap(640, 480)
+    let mutable lastVertex:Point option = Some (new Point(0,0))
     do
         for x = 0 to bitmap.Width-1 do
             for y = 0 to bitmap.Height-1 do
@@ -48,28 +49,46 @@ type Image() =
         let g = Graphics.FromImage(bitmap)
         g.DrawLine(Pens.Yellow, 0, b.Height-1, b.Width-1, 0)
     member val Bitmap = bitmap
+    member img.AddVertex(p:Point):Rectangle option =
+        match lastVertex with
+        | None -> 
+            lastVertex <- Some p
+            None
+        | Some last ->
+            let g = Graphics.FromImage(bitmap)
+            g.DrawLine(Pens.Yellow, last, p)
+            lastVertex <- Some p
+            Some (Rectangle.FromLTRB(min last.X p.X, min last.Y p.Y, max last.X p.X, max last.Y p.Y))
 
 type Canvas() =
     inherit Control()
     let image = new Image()
+    let mutable scale = 1.
+    let img2win coord = float coord * scale |> int
+    let win2img coord = float coord / scale |> int
     override c.OnResize(e:EventArgs) =
+        let ys = float c.ClientSize.Width / float image.Bitmap.Width
+        let xs = float c.ClientSize.Height / float image.Bitmap.Height
+        scale <- min xs ys
         // Make sure to repaint the whole window when resized
         c.Refresh()
     override c.OnPaint(e:PaintEventArgs) =
         //System.Diagnostics.Debug.WriteLine("OnPaint {0}x{1}", c.ClientSize.Width, c.ClientSize.Height)
         base.OnPaint(e)
-        let ys = float c.ClientSize.Width / float image.Bitmap.Width
-        let xs = float c.ClientSize.Height / float image.Bitmap.Height
-        let rescale n = (float n) * (min xs ys) |> int
         let g = e.Graphics
         g.InterpolationMode <- InterpolationMode.NearestNeighbor
-        g.DrawImage(image.Bitmap, 0, 0, rescale image.Bitmap.Width, rescale image.Bitmap.Height)
+        g.DrawImage(image.Bitmap, 0, 0, image.Bitmap.Width |> img2win, image.Bitmap.Height |> img2win)
     // TODO: split "model" from "view"; or painting-related code from the GUI-mandated ceremony code
     override c.OnMouseClick(e:MouseEventArgs) =
         if not toolbox.Visible
         then toolbox.Show()
-//        else c.AddVertex(e.X, e.Y)
-//    member c.AddVertex(x, y) =        
+        else
+            System.Diagnostics.Debug.WriteLine("Click: {0}, {1}", e.X, e.Y)
+            match image.AddVertex(new Point(e.X |> win2img, e.Y |> win2img)) with
+            | None -> ()
+            | Some rect ->
+                System.Diagnostics.Debug.WriteLine("  redraw: {0}", rect)
+                c.Invalidate(new Rectangle(rect.X |> img2win, rect.Y |> img2win, rect.Width |> img2win, rect.Height |> img2win))
     
 let canvas = new Canvas(Dock=DockStyle.Fill)
 form.Controls.Add(canvas)

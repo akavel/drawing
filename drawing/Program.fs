@@ -18,6 +18,7 @@ let ok = SetProcessDpiAwareness(PROCESS_DPI_AWARENESS.Process_System_DPI_Aware)
 if ok <> 0 then
     System.Diagnostics.Debug.WriteLine(sprintf "couldn't change DPI awareness: %A" ok)
 
+// TODO: fix "holes" between lines sometimes (they disappear after resize & redraw)
 // TODO: two-finger (or one-finger?) pan & zoom of the canvas on touch-enabled computers
 // TODO: the tool-window has color picker (pipette)
 // TODO: add F# REPL
@@ -27,6 +28,8 @@ if ok <> 0 then
 let dump msg obj =
     System.Diagnostics.Debug.WriteLine(msg + ": {0}", [obj])
     obj
+let points2rect (p1:Point) (p2:Point) =
+    Rectangle.FromLTRB(min p1.X p2.X, min p1.Y p2.Y, max p1.X p2.X + 1, max p1.Y p2.Y + 1)
 
 let form = new Form(Visible=true, Text="Drawing App", WindowState=FormWindowState.Maximized)
 
@@ -43,7 +46,7 @@ let toolbox = new Toolbox(Visible=true, Text="testing", TopMost=true)
 
 type Image() =
     let bitmap = new Bitmap(640, 480)
-    let mutable lastVertex:Point option = Some (new Point(0,0))
+    let mutable lastVertex:Point option = None
     do
         for x = 0 to bitmap.Width-1 do
             for y = 0 to bitmap.Height-1 do
@@ -52,17 +55,16 @@ type Image() =
         let g = Graphics.FromImage(bitmap)
         g.DrawLine(Pens.Yellow, 0, b.Height-1, b.Width-1, 0)
     member val Bitmap = bitmap
-    member img.AddVertex(p:Point):Rectangle option =
+    member val LastVertex = lastVertex
+    member img.AddVertex(p:Point):Point option =
         match lastVertex with
         | None -> 
             lastVertex <- Some p
-            None
         | Some last ->
             let g = Graphics.FromImage(bitmap)
             g.DrawLine(Pens.Yellow, last, p)
             lastVertex <- Some p
-            // NOTE: FromLTRB apparently treats bottom and right edges as out of the rectangle
-            Some (Rectangle.FromLTRB(min last.X p.X, min last.Y p.Y, max last.X p.X + 1, max last.Y p.Y + 1))
+        lastVertex
 
 type Canvas() as c =
     inherit Control()
@@ -72,6 +74,9 @@ type Canvas() as c =
     let mutable scale = 1.
     let img2win coord = float coord * scale |> int
     let win2img coord = float coord / scale |> int
+    let img2winP (p:Point) = new Point(img2win p.X, img2win p.Y)
+    let mutable lineStart:Point option = None
+    let mutable lineEnd:Point option = None
     override c.OnResize(e:EventArgs) =
         let ys = float c.ClientSize.Width / float image.Bitmap.Width
         let xs = float c.ClientSize.Height / float image.Bitmap.Height
@@ -84,17 +89,40 @@ type Canvas() as c =
         let g = e.Graphics
         g.InterpolationMode <- InterpolationMode.NearestNeighbor
         g.DrawImage(image.Bitmap, 0, 0, image.Bitmap.Width |> img2win, image.Bitmap.Height |> img2win)
+        match lineStart, lineEnd with
+        | Some s, Some e ->
+            g.DrawLine(Pens.Yellow, s, e)
+        | _, _ -> ()
+    override c.OnMouseMove(e:MouseEventArgs) =
+        if toolbox.Visible then
+            match lineStart with
+            | None -> ()
+            | Some s ->
+                match lineEnd with
+                | None -> ()
+                | Some e -> c.Invalidate(points2rect s e)
+                let p = new Point(e.X, e.Y)
+                lineEnd <- Some p
+                c.Invalidate(points2rect s p)
     // TODO: split "model" from "view"; or painting-related code from the GUI-mandated ceremony code
     override c.OnMouseClick(e:MouseEventArgs) =
         if not toolbox.Visible
         then toolbox.Show()
         else
-            System.Diagnostics.Debug.WriteLine("Click: {0}, {1}", e.X, e.Y)
-            match image.AddVertex(new Point(e.X |> win2img, e.Y |> win2img)) with
+            match lineStart with
             | None -> ()
-            | Some rect ->
-                System.Diagnostics.Debug.WriteLine("  redraw: {0}", rect)
-                c.Invalidate(new Rectangle(rect.X |> img2win, rect.Y |> img2win, rect.Width |> img2win, rect.Height |> img2win))
+            | Some s ->
+                c.Invalidate(points2rect s (new Point(e.X, e.Y)))
+                match lineEnd with
+                | None -> ()
+                | Some e -> c.Invalidate(points2rect s e)
+            match image.AddVertex(new Point(e.X |> win2img, e.Y |> win2img)) with
+            | None ->
+                lineStart <- None
+                lineEnd <- None
+            | Some p ->
+                lineStart <- img2winP p |> Some
+                lineEnd <- lineStart
     
 let canvas = new Canvas(Dock=DockStyle.Fill)
 form.Controls.Add(canvas)

@@ -46,14 +46,11 @@ let toolbox = new Toolbox(Visible=true, Text="testing", TopMost=true)
 
 type Image() =
     let bitmap = new Bitmap(640, 480)
+    let mutable polygon:Point list = []
     let mutable lastVertex:Point option = None
     do
-        for x = 0 to bitmap.Width-1 do
-            for y = 0 to bitmap.Height-1 do
-                bitmap.SetPixel(x, y, Color.Black)
-        let b = bitmap
         let g = Graphics.FromImage(bitmap)
-        g.DrawLine(Pens.Yellow, 0, b.Height-1, b.Width-1, 0)
+        g.FillRectangle(Brushes.Black, 0, 0, bitmap.Width, bitmap.Height)
     member val Bitmap = bitmap
     member val LastVertex = lastVertex
     member img.AddVertex(p:Point):Point option =

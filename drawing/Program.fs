@@ -25,6 +25,12 @@ if ok <> 0 then
 // TODO: in future, make fullscreen: FormBorderStyle=FormBorderStyle.None; but find out a way to revert this
 // TODO: in future, consider trying to speed-up bitmap drawing by using Direct2D (e.g. D2D1CreateFactory via pinvoke?) or GDI
 
+let rec pairwise f list =
+    match list with
+    | [] | [_] -> ()
+    | a :: b :: rest ->
+        f a b
+        pairwise f (b::rest)
 let dump msg obj =
     System.Diagnostics.Debug.WriteLine(msg + ": {0}", [obj])
     obj
@@ -46,6 +52,8 @@ let toolbox = new Toolbox(Visible=true, Text="testing", TopMost=true)
 
 type Image() =
     let bitmap = new Bitmap(640, 480)
+    let mutable pen:Pen = Pens.White
+    let mutable brush = new SolidBrush(pen.Color)
     let mutable polygon:Point list = []
     let mutable start:Point option = None
     let nearStart (p:Point) =
@@ -53,6 +61,11 @@ type Image() =
         match start with
         | Some s when len (s.X-p.X) (s.Y-p.Y) <= 5. -> true, s
         | _ -> false, p
+    let rec drawLines (points:Point list) (g:Graphics option) =
+        let g = match g with
+                | Some g -> g
+                | None -> Graphics.FromImage(bitmap)
+        points |> pairwise (fun p1 p2 -> g.DrawLine(pen, p1, p2))
     do
         let g = Graphics.FromImage(bitmap)
         g.FillRectangle(Brushes.Black, 0, 0, bitmap.Width, bitmap.Height)
@@ -61,6 +74,12 @@ type Image() =
         match polygon with
         | p :: rest -> Some p
         | [] -> None
+    member img.Lines = polygon
+    member img.Color
+        with set (c:Color) =
+            pen <- new Pen(c)
+            brush <- new SolidBrush(c)
+            drawLines polygon None
     member img.AddVertex(p:Point) =
         let g = Graphics.FromImage(bitmap)
         let close, p = nearStart p
@@ -68,9 +87,9 @@ type Image() =
         | [], _ ->
             start <- Some p
         | last :: rest, false ->
-            g.DrawLine(Pens.Yellow, last, p)
+            drawLines [last;p] None
         | _, true ->
-            g.FillPolygon(Brushes.Yellow, polygon |> List.toArray)
+            g.FillPolygon(brush, polygon |> List.toArray)
         match close with
         | false ->
             polygon <- p :: polygon
@@ -90,6 +109,12 @@ type Canvas() as c =
     let img2winP (p:Point) = new Point(img2win p.X, img2win p.Y)
     let repaint p1 p2 =
         c.Invalidate(points2rect p1 p2)
+    member c.Color
+        with set (col:Color) =
+            image.Color <- col
+            image.Lines
+            |> List.map img2winP
+            |> pairwise repaint
     override c.OnResize(e:EventArgs) =
         let ys = float c.ClientSize.Width / float image.Bitmap.Width
         let xs = float c.ClientSize.Height / float image.Bitmap.Height
@@ -157,7 +182,7 @@ let s1::s2::s3::[] = [1..3] |> List.map (fun _ ->
 toolbox.MinimumSize <- new Size(s1.PreferredSize.Width, 4*s1.PreferredSize.Height+(form.Height-form.ClientRectangle.Height))
 toolbox.Height <- 2*(5*s1.PreferredSize.Height+(form.Height-form.ClientRectangle.Height))
 toolbox.Width <- toolbox.Height
-let recolor _ =
+let recolorPanel _ =
     let s (s:HScrollBar) = float s.Value / float s.Maximum
     let lch = CIELCH (150.*s s3, 100.*s s2, 360.*s s1)
     //System.Diagnostics.Debug.WriteLine(sprintf "%A" lch)
@@ -167,6 +192,9 @@ let recolor _ =
     let i f = f*255.0 |> int |> max 0 |> min 255
     colorDisplay.BackColor <- Color.FromArgb(i r, i g, i b)
     //colorDisplay.BackColor <- ahsbToColor 255 (360.*s s1) (s s3) (s s2)
+let recolor _ =
+    recolorPanel ()
+    canvas.Color <- colorDisplay.BackColor
 s1.ValueChanged.Add(recolor)
 s2.ValueChanged.Add(recolor)
 s3.ValueChanged.Add(recolor)
